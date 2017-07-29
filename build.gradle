@@ -15,7 +15,18 @@ repositories {
 }
 
 dependencies {
-    compile 'net.dv8tion:JDA:3.0.0_155'
+    compile 'net.dv8tion:JDA:3.2.0_239'
 }
 
 compileJava.options.encoding = 'UTF-8'
+
+apply plugin: 'java'
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'Mechanics'
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

@@ -15,7 +15,7 @@ public class Mechanics {
     {
         JDA api = new JDABuilder(AccountType.BOT)
                 .setToken("Mjk4OTI0NTI0MzIwMDYzNDkw.C8WbZQ.yhiF6wIlOmPO82p4yCTbE94GsJQ")
-                .addListener(new Commands())
+                .addEventListener(new Commands())
                 .buildAsync();
     }
 }
