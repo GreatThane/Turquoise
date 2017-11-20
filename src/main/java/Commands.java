@@ -17,17 +17,19 @@ public class Commands extends ListenerAdapter {
     private static final Pattern triggerPattern = Pattern.compile(".*?[\\s]*(Hey|Hi|Hello|Yo|Okay|Ok|Oi|Ay)[\\s]*Turq[,:;]?\\s(.*)\\?*", Pattern.CASE_INSENSITIVE);
     private static final Pattern statsPattern = Pattern.compile(".*stats for (.*?) in (.*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern reasonPattern = Pattern.compile("(.*?)reason why(.*?)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern calendarPattern = Pattern.compile("(.?)(?:where is|when is)\\s?(Thane|Bluee)*(.*?)\\??", Pattern.CASE_INSENSITIVE);
+    private static final Pattern calendarPattern = Pattern.compile(".*?(?:event|party)\\s?(.*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern developerPattern = Pattern.compile("(.*)\\s?developer option\\s?[,:;\\-=~]?\\s?(.*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern sendNudesPattern = Pattern.compile(".*(send|have|give)\\s?.*?\\s?nude.*", Pattern.CASE_INSENSITIVE);
     private static final Pattern coinFlipPattern = Pattern.compile(".*?(?:flip|toss)\\s?.*?\\s?coin.*?", Pattern.CASE_INSENSITIVE);
     private static final Pattern repeatAfterMePattern = Pattern.compile(".*?repeat\\safter\\sme\\s?[,:;\\-=~]?\\s?\"?(.*?)\"?", Pattern.CASE_INSENSITIVE);
     private static final Pattern rollDiePattern = Pattern.compile(".*?(?:roll|throw|catch|spin)\\s?.*?\\s?(die|dice).*", Pattern.CASE_INSENSITIVE);
-    private static final Pattern randomVideoPattern = Pattern.compile(".*?(vid|video|movie).*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern randomVideoPattern = Pattern.compile(".*?(?:vid|video|movie).*", Pattern.CASE_INSENSITIVE);
     private static final Pattern randomMemePattern = Pattern.compile(".*?meme.*", Pattern.CASE_INSENSITIVE);
     private static final Pattern rateMePattern = Pattern.compile(".*?(?:rate|r8)\\s(.*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern rabbitPattern = Pattern.compile(".*?(rabbit\\scast|rabbitcast|rabbit).*", Pattern.CASE_INSENSITIVE);
     private static final Pattern helpPattern = Pattern.compile(".*?(?:help|command).*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern joinPattern = Pattern.compile(".*?join\\s(?:us|me)?(.*)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern quitPattern = Pattern.compile(".*?(?:leave|quit)", Pattern.CASE_INSENSITIVE);
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -90,11 +92,7 @@ public class Commands extends ListenerAdapter {
                 StatsFinder.showStats(event, privateChannel, msg, statsMatcher);
                 return;
             }
-            Matcher calendarMatcher = calendarPattern.matcher(botCommand);
-            if (calendarMatcher.matches()) {
-                CalendarFinder.showCalendar(event, privateChannel, msg, calendarMatcher, author);
-                return;
-            }
+
 
             if (processCommonCommands(botCommand, privateChannel, event)) {
                 return;
@@ -165,6 +163,15 @@ public class Commands extends ListenerAdapter {
         if (helpMatcher.matches()) {
             HelpCommand.showHelp(event, channel, event.getMessage().getContent(), randomMemeMatcher, event.getAuthor());
             return true;
+        }
+        Matcher calendarMatcher = calendarPattern.matcher(botCommand);
+        if (calendarMatcher.matches()) {
+            CalendarFinder.showCalendar(event, channel, event.getMessage().getContent(), randomMemeMatcher, event.getAuthor());
+            return true;
+        }
+        Matcher joinMatcher = joinPattern.matcher(botCommand);
+        if (joinMatcher.matches()) {
+
         }
 
         return false;

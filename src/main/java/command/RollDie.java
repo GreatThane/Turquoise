@@ -8,9 +8,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import java.util.Random;
 import java.util.regex.Matcher;
 
-/**
- * Created by ethan on 7/2/17.
- */
 public class RollDie {
 
     public static void showRollDie(MessageReceivedEvent event, MessageChannel channel, String msg, Matcher repeatAfterMeMatcher, User author) {
