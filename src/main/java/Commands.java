@@ -28,7 +28,7 @@ public class Commands extends ListenerAdapter {
     private static final Pattern rateMePattern = Pattern.compile(".*?(?:rate|r8)\\s(.*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern rabbitPattern = Pattern.compile(".*?(rabbit\\scast|rabbitcast|rabbit).*", Pattern.CASE_INSENSITIVE);
     private static final Pattern helpPattern = Pattern.compile(".*?(?:help|command).*", Pattern.CASE_INSENSITIVE);
-    private static final Pattern joinPattern = Pattern.compile(".*?join\\s(?:us|me)?(.*)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern joinPattern = Pattern.compile(".*?(?:join).*", Pattern.CASE_INSENSITIVE);
     private static final Pattern quitPattern = Pattern.compile(".*?(?:leave|quit)", Pattern.CASE_INSENSITIVE);
 
     @Override
@@ -171,7 +171,8 @@ public class Commands extends ListenerAdapter {
         }
         Matcher joinMatcher = joinPattern.matcher(botCommand);
         if (joinMatcher.matches()) {
-
+            JoinCall.join(event, channel, event.getMessage().getContent(), randomMemeMatcher, event.getAuthor());
+            return true;
         }
 
         return false;
