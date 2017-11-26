@@ -16,7 +16,7 @@ public class Commands extends ListenerAdapter {
 
     private static final Pattern triggerPattern = Pattern.compile(".*?[\\s]*(Hey|Hi|Hello|Yo|Okay|Ok|Oi|Ay)[\\s]*Turq[,:;]?\\s(.*)\\?*", Pattern.CASE_INSENSITIVE);
     private static final Pattern statsPattern = Pattern.compile(".*stats for (.*?) in (.*)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern reasonPattern = Pattern.compile("(.*?)reason why(.*?)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern reasonPattern = Pattern.compile("(.*?)reason\\swhy(.*?)", Pattern.CASE_INSENSITIVE);
     private static final Pattern calendarPattern = Pattern.compile(".*?(?:event|party)\\s?(.*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern developerPattern = Pattern.compile("(.*)\\s?developer option\\s?[,:;\\-=~]?\\s?(.*)", Pattern.CASE_INSENSITIVE);
     private static final Pattern sendNudesPattern = Pattern.compile(".*(send|have|give)\\s?.*?\\s?nude.*", Pattern.CASE_INSENSITIVE);
@@ -30,6 +30,7 @@ public class Commands extends ListenerAdapter {
     private static final Pattern helpPattern = Pattern.compile(".*?(?:help|command).*", Pattern.CASE_INSENSITIVE);
     private static final Pattern joinPattern = Pattern.compile(".*?(?:join).*", Pattern.CASE_INSENSITIVE);
     private static final Pattern quitPattern = Pattern.compile(".*?(?:leave|quit)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern playPattern = Pattern.compile(".*?play(.*)", Pattern.CASE_INSENSITIVE);
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -174,9 +175,17 @@ public class Commands extends ListenerAdapter {
             JoinCall.join(event, channel, event.getMessage().getContent(), randomMemeMatcher, event.getAuthor());
             return true;
         }
-
+        Matcher quitMatcher = quitPattern.matcher(botCommand);
+        if (quitMatcher.matches()) {
+            JoinCall.leave(event, channel, event.getMessage().getContent(), randomMemeMatcher, event.getAuthor());
+            return true;
+        }
+        Matcher playMatcher = playPattern.matcher(botCommand);
+        if (playMatcher.matches()) {
+            PlayMusic.play(event, channel, event.getMessage().getContent(), randomMemeMatcher, event.getAuthor());
+            return true;
+        }
         return false;
-
     }
 
 

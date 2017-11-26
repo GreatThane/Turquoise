@@ -1,11 +1,8 @@
 package command;
 
-import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
-import com.sedmelluq.discord.lavaplayer.player.hook.AudioOutputHook;
-import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
@@ -14,48 +11,88 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
-import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import music.TrackScheduler;
 import music.AudioPlayerSendHandler;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.dv8tion.jda.core.managers.AudioManager;
 
+import java.util.HashMap;
 import java.util.regex.Matcher;
 
 public class JoinCall extends ListenerAdapter {
 
+    public static HashMap<String, AudioManager> managers = new HashMap<>();
+    public static AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    public static AudioPlayer player = playerManager.createPlayer();
+    public static TrackScheduler trackScheduler = new TrackScheduler(player);
+
     public static void join(MessageReceivedEvent event, MessageChannel channel, String msg, Matcher joinCallMatcher, User author) {
-        Guild guild = event.getGuild();
 
-        VoiceChannel voiceChannel = guild.getVoiceChannelsByName("general", true).get(0);
-        AudioManager manager = guild.getAudioManager();
+        VoiceChannel voiceChannel = null;
+        ChannelType type = channel.getType();
+        switch (type) {
 
-        AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-        YoutubeAudioSourceManager ytManager = new YoutubeAudioSourceManager();
-        playerManager.registerSourceManager(ytManager);
-        //AudioSourceManagers.registerRemoteSources(playerManager);
+            case GROUP:
+                voiceChannel = (VoiceChannel) event.getGroup().getCurrentCall().getCallableChannel();
+                break;
 
-        AudioPlayer player = playerManager.createPlayer();
-        TrackScheduler trackScheduler = new TrackScheduler(player);
+            case PRIVATE:
+                event.getPrivateChannel().startCall();
+                voiceChannel = (VoiceChannel) event.getPrivateChannel().getCurrentCall().getCallableChannel();
+                break;
+
+            case TEXT:
+                for (VoiceChannel vc : event.getGuild().getVoiceChannels()) {
+                    for (Member member : vc.getMembers()) {
+                        if (author.getDiscriminator().equalsIgnoreCase(member.getUser().getDiscriminator())) {
+                            voiceChannel = vc;
+                            break;
+                        }
+                    }
+                    if (voiceChannel != null && voiceChannel.equals(vc)) {
+                        break;
+                    }
+                }
+                break;
+        }
+        try {
+            managers.put(voiceChannel.getId(), (AudioManager) voiceChannel.getManager());
+        } catch (NullPointerException e) {
+            channel.sendMessage("Nope don't feel like it.").complete();
+        }
+
         player.addListener(trackScheduler);
 
-        AudioTrackInfo audioTrackInfo = new AudioTrackInfo("theme song", "C418", 5, "Jmv5pTyz--I", false, "https://www.youtube.com/watch?v=Jmv5pTyz--I"); 
-        YoutubeAudioTrack track = new YoutubeAudioTrack(audioTrackInfo, ytManager);
+        managers.get(voiceChannel.getId()).setSendingHandler(new AudioPlayerSendHandler(player));
+        managers.get(voiceChannel.getId()).openAudioConnection(voiceChannel);
+    }
 
-        trackScheduler.queue(track);
-        
-        //playerManager.loadItem
-
-        manager.setSendingHandler(new AudioPlayerSendHandler(player));
-        manager.openAudioConnection(voiceChannel);
+    public static void leave(MessageReceivedEvent event, MessageChannel channel, String msg, Matcher joinCallMatcher, User author) {
+        VoiceChannel voiceChannel = null;
+        switch (channel.getType()) {
+            case GROUP:
+                voiceChannel = (VoiceChannel) event.getGroup().getCurrentCall().getCallableChannel();
+                break;
+            case PRIVATE:
+                voiceChannel = (VoiceChannel) event.getPrivateChannel().getCurrentCall().getCallableChannel();
+                break;
+            case TEXT:
+                for (VoiceChannel vc : event.getGuild().getVoiceChannels()) {
+                    for (Member member : vc.getMembers()) {
+                        if (author.getDiscriminator().equalsIgnoreCase(member.getUser().getDiscriminator())) {
+                            voiceChannel = vc;
+                            break;
+                        }
+                    }
+                    if (voiceChannel != null && voiceChannel.equals(vc)) {
+                        break;
+                    }
+                }
+                break;
+        }
+        managers.get(voiceChannel.getId()).closeAudioConnection();
     }
 }
